@@ -42,6 +42,37 @@ const PreviewExpenses = () => {
     setExpenseSortedData(sortedExpenses);
   }, [expenseData]);
 
+  // Helper functions to calculate expenses for today, this week, and this year
+  const calculateExpenseForToday = () => {
+    const today = new Date().setHours(0, 0, 0, 0);
+    return expenseData.expenses
+      .filter(
+        (expense) => new Date(expense.date).setHours(0, 0, 0, 0) === today
+      )
+      .reduce((acc, expense) => acc + expense.amount, 0);
+  };
+
+  const calculateExpenseForThisWeek = () => {
+    const today = new Date();
+    const firstDayOfWeek = today.getDate() - today.getDay(); // Sunday as the first day of week
+    const startOfWeek = new Date(today.setDate(firstDayOfWeek)).setHours(
+      0,
+      0,
+      0,
+      0
+    );
+
+    return expenseData.expenses
+      .filter((expense) => new Date(expense.date).getTime() >= startOfWeek)
+      .reduce((acc, expense) => acc + expense.amount, 0);
+  };
+
+  const calculateExpenseForThisYear = () => {
+    const currentYear = new Date().getFullYear();
+    return expenseData.expenses
+      .filter((expense) => new Date(expense.date).getFullYear() === currentYear)
+      .reduce((acc, expense) => acc + expense.amount, 0);
+  };
 
   if (expenseData.expenses.length > 0) {
     const deleteExpenseHandler = (item: Expense) => {
@@ -94,49 +125,74 @@ const PreviewExpenses = () => {
 
     return (
       <div className="p-5 w-full h-full">
-        <>
-          <Breadcrumb
-            items={breadcrumbItems}
-            button={{
-              label: "Export Income Data As CSV",
-              onClick: downloadCsv,
-            }}
-          />
-          <div className="px-10 py-8 bg-base-200 grid lg:grid-cols-2 grid-cols-1 gap-10 rounded-xl">
-            <div className="card bg-neutral text-neutral-content">
-              <div className="card-body items-center text-center">
-                <h2 className="card-title">Total Expenses</h2>
-                <p>Rs. {totalExpense}</p>
-              </div>
+        <Breadcrumb
+          items={breadcrumbItems}
+          button={{
+            label: "Export Expense Data As CSV",
+            onClick: downloadCsv,
+          }}
+        />
+        <div className="px-10 py-8 bg-base-200 grid lg:grid-cols-3 grid-cols-1 gap-10 rounded-xl mb-6">
+          <div className="card bg-neutral text-neutral-content">
+            <div className="card-body items-center text-center">
+              <h2 className="card-title">Total Expenses</h2>
+              <p>Rs. {`${parseInt(totalExpense.toString())}`}</p>
             </div>
-            <div className="card bg-neutral text-neutral-content">
-              <div className="card-body items-center text-center">
-                <h2 className="card-title">Recent</h2>
-                <p>Rs. {recentExpenseAmount}</p>
-              </div>
+          </div>
+          <div className="card bg-neutral text-neutral-content">
+            <div className="card-body items-center text-center">
+              <h2 className="card-title">Recent</h2>
+              <p>Rs. {`${parseInt(recentExpenseAmount.toString())}`}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-10 py-8 bg-base-200 grid lg:grid-cols-3 grid-cols-1 gap-10 rounded-xl">
+
+          <div className="card bg-neutral text-neutral-content">
+            <div className="card-body items-center text-center">
+              <h2 className="card-title">Expenses Today</h2>
+              <p>Rs. {`${parseInt(calculateExpenseForToday().toString())}`}</p>
             </div>
           </div>
 
-          <div className="px-10 py-8 bg-base-200 mt-5 rounded-xl">
-          <h3 className="pb-10 text-2xl">Expense Graph</h3>
-            <div className="chart-container mb-5">
-              <Line
-                data={chartData}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    title: { display: true, text: "Expense Over Time" },
-                  },
-                }}
-              />
+          <div className="card bg-neutral text-neutral-content">
+            <div className="card-body items-center text-center">
+              <h2 className="card-title">Expenses This Week</h2>
+              <p>Rs. {`${parseInt(calculateExpenseForThisWeek().toString())}`}</p>
             </div>
           </div>
-        </>
+
+          <div className="card bg-neutral text-neutral-content">
+            <div className="card-body items-center text-center">
+              <h2 className="card-title">Expenses This Year</h2>
+              <p>Rs. {`${parseInt(calculateExpenseForThisYear().toString())}`}</p>
+            </div>
+          </div>
+        </div>
 
         <div className="px-10 py-8 bg-base-200 mt-5 rounded-xl">
-        <h3 className="pb-10 text-2xl">Expense List</h3>
+          <h3 className="pb-10 text-2xl">Expense Graph</h3>
+          <div className="chart-container mb-5">
+            <Line
+              data={chartData}
+              options={{
+                responsive: true,
+                plugins: {
+                  title: { display: true, text: "Expense Over Time" },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="px-10 py-8 bg-base-200 mt-5 rounded-xl">
+          <h3 className="pb-10 text-2xl">Expense List</h3>
           <div className="overflow-x-auto">
-            <Table expenseSortedData={expenseSortedData} deleteExpenseHandler={deleteExpenseHandler} />
+            <Table
+              expenseSortedData={expenseSortedData}
+              deleteExpenseHandler={deleteExpenseHandler}
+            />
           </div>
         </div>
 
